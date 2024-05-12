@@ -1,6 +1,6 @@
-# Nuxt 3 Minimal Starter
+#letterboxd-review-to-img
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+###this is a simple project to transform a letterboxd review to a framed picture, with your review, rating and your user with picture
 
 ## Setup
 
