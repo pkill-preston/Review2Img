@@ -1,6 +1,6 @@
-#letterboxd-review-to-img
+# letterboxd-review-to-img
 
-###this is a simple project to transform a letterboxd review to a framed picture, with your review, rating and your user with picture
+### this is a simple project to transform a letterboxd review to a framed picture, with your review, rating and your user with picture
 
 ## Setup
 
