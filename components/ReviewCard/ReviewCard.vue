@@ -1,24 +1,18 @@
 <template>
-  <div class="card container">
+  <div ref="card" class="card container">
     <div class="poster half">
       <div class="image">
-        <img class="movie"
-          src="https://a.ltrbxd.com/resized/film-poster/1/6/5/3/0/16530-all-quiet-on-the-western-front-0-1000-0-1500-crop.jpg?v=bff4d496a1"
-          alt="movie poster" srcset="">
-        <div class="shadow">
-          <p class="text title">All Quiet on the Western Front</p>
-          <p class="text year">(2022)</p>
-          <p class="text director">Edward Berger</p>
-        </div>
+        <img ref="poster" class="movie" :src=moviePoster alt="movie poster" srcset="">
       </div>
     </div>
     <div class="review half">
+      <div class="film info">
+        <p class="title">{{ title }}</p>
+        <p class="director">{{ director }}<span style="color: white;">, {{ year }}</span></p>
+      </div>
       <div class="review container">
         <div class="quotes container">
-          <p class="review text">
-            Lorem ipsum dolor sit amet. Non galisum voluptatem est accusamus debitis et ipsa iusto et quia accusantium
-            sed saepe galisum non quis quod. Qui beatae inventore et nulla officiis id quae suscipit At cupiditate
-            cupiditate est molestiae voluptas et placeat veasdasdlit.</p>
+          <p class="review text">{{ review }}</p>
           <div class="quotes box">
             <div class="upper quote">„</div>
             <div class="lower quote">“</div>
@@ -27,31 +21,126 @@
       </div>
       <div class="user">
         <div class="profile">
-          <img class="user icon"
-            src="https://a.ltrbxd.com/resized/avatar/upload/6/8/9/2/1/0/4/shard/avtr-0-220-0-220-crop.jpg?v=d30fbd7c8c"
-            alt="user icon">
-          <p class="name">filledwithblues</p>
+          <img ref="avatar" class="user icon" :src=profilePicture alt="user icon">
+          <p class="name">{{ user }}</p>
         </div>
         <div class="rating">
-          <p class="value">5</p>
+          <p class="value">{{ rating }}</p>
           <img class="star" src="public/Vector.svg" alt="a star icon">
         </div>
       </div>
     </div>
   </div>
+  <div class="options">
+    <div class="submit">
+
+    </div>
+    <div class="share">
+
+    </div>
+    <button class="button" size="lg" @click="downloadImg()" label="Download">Download</button>
+  </div>
 </template>
 
 <script>
-export default {
-  setup() {
+import html2canvas from 'html2canvas';
 
-    return {}
+export default {
+  props: {
+    title: {
+      type: String,
+      default: "Movie Title",
+    },
+    moviePoster: {
+      type: String,
+      default: "/_nuxt/public/poster_placeholder.png",
+    },
+    year: {
+      type: Number,
+      default: new Date().getFullYear(),
+    },
+    director: {
+      type: String,
+      default: "Foo",
+    },
+    user: {
+      type: String,
+      default: "Username",
+    },
+    profilePicture: {
+      type: String,
+      default: "/_nuxt/public/placeholder.webp",
+    },
+    rating: {
+      type: Number,
+      default: 1,
+    },
+    review: {
+      type: String,
+      default: "Certainly one of the films ever created",
+    },
+  },
+  setup() {
+  },
+  methods: {
+    cloneReviewCanvas(element) {
+      var clone = element.cloneNode(true);
+      var style = clone.style;
+      style.color = 'white';
+      style.position = "relative";
+      style.top = window.innerHeight + "px";
+      style.left = 0;
+      document.body.appendChild(clone);
+      return clone;
+    },
+    async downloadImg() {
+      const card = document.querySelector('.card.container')
+      window.scrollTo(0, 0);
+      let clone = this.cloneReviewCanvas(card);
+      html2canvas(clone, { scrollY: window.scrollY }).then((canvas) => {
+        let dataURL = canvas.toDataURL("image/png", 1.0);
+        let link = document.createElement("a");
+        link.href = dataURL;
+        link.download = 'review.png';
+        document.body.removeChild(clone);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      })
+    },
   }
 }
 </script>
 
-<style lang="scss" scoped>
-@import url('https://fonts.googleapis.com/css2?family=Neuton:ital,wght@0,200;0,300;0,400;0,700;0,800;1,400&display=swap');
+<style lang="css" scoped>
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&family=Neuton:ital,wght@0,200;0,300;0,400;0,700;0,800;1,400&family=Xanh+Mono:ital@0;1&display=swap');
+
+* {
+  font-family: "Manrope", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+p,
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  padding: 0;
+}
+
+
+
+.button {
+  padding: 12px 8px;
+  border-radius: 12px;
+  background: #00E054;
+  border: none;
+  color: white;
+  font-size: 1em;
+  cursor: pointer;
+}
 
 .card.container {
   display: flex;
@@ -60,7 +149,7 @@ export default {
   max-height: 45rem;
   min-width: 45rem;
   max-width: 45rem;
-  background: #14181C;
+  background: #202830;
 }
 
 .half {
@@ -70,8 +159,6 @@ export default {
   height: 100%;
 }
 
-
-
 .poster {
   justify-content: flex-end;
   background: url();
@@ -79,55 +166,48 @@ export default {
 }
 
 .image {
-  position: relative;
-  height: 45rem;
+  margin: 0 auto;
+  overflow: hidden;
   display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: center;
+  position: relative
 }
 
 .movie {
-  display: flex;
-  object-fit: cover;
-  flex-direction: column;
-  justify-content: flex-end;
+  max-width: 150%;
+  width: 150%;
   height: 100%;
 }
 
-.shadow {
-  display: flex;
-  flex-direction: column;
-  position: absolute;
-  width: 100%;
-  height: 45%;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 1) 100%);
-  padding: 0 1rem 2rem 1rem;
-  justify-content: flex-end;
-  align-items: center;
-}
+
 
 .text {
   text-align: center;
 }
 
+.film.info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 1rem 1rem 0 1rem;
+  height: 10rem;
+  border-bottom: 1px solid white;
+}
+
 .title {
-  font-size: 2.25em;
+  margin: 0;
+  font-size: 1.75em;
   overflow: hidden;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
 }
 
-.year {
-  font-size: 1.5em;
-}
-
 .director {
-  font-size: 2em
-}
-
-.review.half {
-  padding: 0 1rem 0 1rem;
+  font-size: 1.5em;
+  font-weight: 100;
+  color: #40BCF4;
 }
 
 .user {
@@ -135,6 +215,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   height: 100px;
+  color: #00E054;
 }
 
 .rating {
@@ -142,6 +223,7 @@ export default {
   gap: 8px;
   justify-content: space-between;
   align-items: center;
+  color: white;
 }
 
 .review.container {
@@ -159,7 +241,8 @@ export default {
 .quotes.box {
   position: absolute;
   height: 100%;
-  width: 100%;
+  max-width: 360px;
+  width: 360px;
   display: flex;
   top: 0;
   flex-direction: column;
@@ -170,50 +253,86 @@ export default {
   width: 100%;
   font-size: 2.5em;
   font-family: "Neuton", serif;
+  padding-bottom: 10px;
 }
 
 .upper.quote {
   position: absolute;
-  top: -50px;
+  top: -40px;
+  padding-left: 1rem;
 }
 
 .lower.quote {
   position: absolute;
   display: flex;
   justify-content: flex-end;
-  bottom: -50px;
+  bottom: -40px;
+  right: 16px;
 }
 
 .review.text {
-  font-size: 2.25em;
-  font-family: "Neuton", serif;
+  font-size: 1.4em;
+  font-family: "Xanh Mono", monospace;
+  font-weight: 400;
+  font-style: normal;
   font-weight: 200;
+  max-height: 28rem;
   font-style: normal;
   word-spacing: 0px;
-  font-size: 2.25em;
   overflow: hidden;
+  padding: 0 1rem;
   display: -webkit-box;
-  -webkit-line-clamp: 12;
+  -webkit-line-clamp: 9;
   -webkit-box-orient: vertical;
+}
+
+.user {
+  border-top: 1px solid white;
+  height: 100%;
+  max-height: 80px;
+  padding: 0 1rem;
 }
 
 .profile {
   display: flex;
-  align-items: center;
   gap: 8px;
+  align-items: center;
 }
 
-.user.icon {
+.icon {
+  width: 50px;
+  height: 50px !important;
+  border: none;
+  padding: 0;
+  border-radius: 8px;
+}
+
+.icon.clone {
   width: 50px;
   height: 50px;
-  border-radius: 50px;
+  border: none;
+  border-radius: 8px;
+}
+
+.star {
+  width: 50px;
+  height: 50px;
 }
 
 .name {
   font-size: 1.5em;
+  line-height: 80px;
 }
 
 .value {
   font-size: 1.5em;
+}
+
+.options {
+  padding: 8px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

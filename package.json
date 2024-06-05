@@ -11,12 +11,19 @@
   },
   "dependencies": {
     "@nuxt/ui": "^2.16.0",
+    "@stefanobartoletti/nuxt-social-share": "^0.7.0",
+    "ab2b64": "^0.9.1",
+    "dom-to-image-cross-origin": "^2.6.7",
+    "file-saver": "^2.0.5",
+    "html2canvas": "^1.4.1",
+    "image-downloader": "^4.3.0",
     "nuxt": "^3.11.2",
     "puppeteer": "^22.8.0",
-    "vue": "^3.4.27",
     "vue-router": "^4.3.2"
   },
   "devDependencies": {
+    "epic-spinners": "^2.0.0",
+    "nuxt-file-storage": "^0.2.3",
     "sass": "^1.77.1"
   }
 }
