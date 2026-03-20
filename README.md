@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # letterboxd-review-to-img
 
 ### this is a simple project to transform a letterboxd review to a framed picture, with your review, rating and your user with picture
@@ -6,15 +5,6 @@
 ## Setup
 
 Make sure to install the dependencies:
-=======
-# Nuxt Minimal Starter
-
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
-
-## Setup
-
-Make sure to install dependencies:
->>>>>>> rebase
 
 ```bash
 # npm
@@ -39,11 +29,7 @@ Start the development server on `http://localhost:3000`:
 npm run dev
 
 # pnpm
-<<<<<<< HEAD
-pnpm run dev
-=======
 pnpm dev
->>>>>>> rebase
 
 # yarn
 yarn dev
@@ -61,11 +47,7 @@ Build the application for production:
 npm run build
 
 # pnpm
-<<<<<<< HEAD
-pnpm run build
-=======
 pnpm build
->>>>>>> rebase
 
 # yarn
 yarn build
@@ -81,11 +63,7 @@ Locally preview production build:
 npm run preview
 
 # pnpm
-<<<<<<< HEAD
-pnpm run preview
-=======
 pnpm preview
->>>>>>> rebase
 
 # yarn
 yarn preview

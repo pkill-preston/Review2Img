@@ -1,16 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-<<<<<<< HEAD
-  devtools: { enabled: true },
-  modules: ["@nuxt/ui"],
-  components: [
-    {
-      path: '~/components',
-      pathPrefix: false,
-    },
-  ]
-})
-=======
 	vite: {
 		optimizeDeps: {
 			include: [
@@ -25,7 +14,6 @@ export default defineNuxtConfig({
 		}
 	},
 	compatibilityDate: "2025-07-15",
-	modules: ["@nuxtjs/tailwindcss", "shadcn-nuxt", "nuxt-og-image"],
+	modules: ["@nuxtjs/tailwindcss", "shadcn-nuxt"],
 	devtools: {enabled: true}
 });
->>>>>>> rebase

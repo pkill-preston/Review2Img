@@ -3,7 +3,6 @@ import { ref, onMounted } from 'vue'
 import Input from './components/ui/input/Input.vue'
 import Button from './components/ui/button/Button.vue'
 
-// Type the data to match your expected structure
 interface ReviewData {
   user: {
     name: string
@@ -40,9 +39,7 @@ const getReview = async (url: string) => {
     }
 
     data.value = await res.json()
-    console.log("Fetched review data:", data.value)
   } catch (err) {
-    console.error("Failed to fetch review:", err)
     error.value = err instanceof Error ? err.message : "Unknown error"
   } finally {
     loading.value = false
