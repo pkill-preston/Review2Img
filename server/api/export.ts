@@ -14,11 +14,11 @@ export default defineEventHandler(async (event) => {
 		return `data:image/jpeg;base64,${Buffer.from(buffer).toString("base64")}`;
 	};
 
-	
+
 	const [posterBase64, avatarBase64, font] = await Promise.all([
 		getImageBase64(poster),
 		getImageBase64(user.picture),
-		readFile(join(process.cwd(), "/app/assets/fonts/Inter-Regular.ttf"))
+		readFile(join(process.cwd(), "@/app/assets/fonts/Inter-Regular.ttf"))
 	]);
 
 	const numericRating = Number(rating) || 0;
