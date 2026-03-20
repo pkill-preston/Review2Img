@@ -1,9 +1,7 @@
 {
     "functions": {
         "api/export.*": {
-            "includeFiles": [
-                "app/assets/fonts/**"
-            ]
+            "includeFiles": "app/assets/fonts/Inter-Regular.ttf"
         }
     }
 }
