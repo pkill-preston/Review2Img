@@ -1,4 +1,5 @@
-import puppeteer, {Browser, Page} from "puppeteer";
+import puppeteer, {Browser, Page} from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 
 interface User {
 	name: string | null;
@@ -30,7 +31,10 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 
 	try {
 		browser = await puppeteer.launch({
-			headless: true
+			args: chromium.args,
+			defaultViewport: chromium.defaultViewport,
+			executablePath: await chromium.executablePath(),
+			headless: chromium.headless
 		});
 
 		const page: Page = await browser.newPage();
@@ -39,6 +43,7 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 		const reviewBody = await page.evaluate((): ReviewData => {
 			const userName =
 				document.querySelector("a.name")?.textContent?.trim() ?? null;
+
 			const userPicture =
 				document
 					.querySelector(".person-summary.-inline > a > img")
@@ -46,12 +51,13 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 					?.replaceAll("-48", "-1000") ?? null;
 
 			let reviewText =
-				document.querySelector(".js-review-body > p")?.innerText?.trim() ??
-				"";
+				document.querySelector(".js-review-body > p")?.innerText?.trim() ?? "";
+
 			const liked = !!document.querySelector(".glyph.inline-liked.-like");
 
 			let ratingRaw =
 				document.querySelector(".glyph.-rating > title")?.textContent ?? "";
+
 			let rating: number | string = ratingRaw;
 
 			if (ratingRaw.endsWith("½")) {
@@ -67,15 +73,18 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 			const topline = document.querySelector(".topline");
 			const filmName = topline?.children[0]?.textContent?.trim() ?? null;
 			const filmReleaseDate = topline?.children[1]?.textContent?.trim() ?? null;
+
 			const filmPage =
-				(topline?.children[0].children[0] as HTMLAnchorElement | undefined)?.href ?? null;
+				(topline?.children[0].children[0] as HTMLAnchorElement | undefined)
+					?.href ?? null;
 
 			const script = document.querySelector(
 				'script[type="application/ld+json"]'
 			);
-			const jsonText = script?.textContent ?? "";
 
+			const jsonText = script?.textContent ?? "";
 			const filmPosterMatch = jsonText.match(/"image"\s*:\s*"([^"]+)"/);
+
 			let filmPoster = filmPosterMatch?.[1] ?? "";
 
 			if (filmPoster) {
@@ -101,7 +110,7 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 
 		if (reviewBody.film.page) {
 			await page.goto(reviewBody.film.page, {
-				waitUntil: "domcontentloaded",
+				waitUntil: "domcontentloaded"
 			});
 
 			director = await page.evaluate(() => {
@@ -125,7 +134,9 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 	} catch (err) {
 		if (browser) await browser.close().catch(() => {});
 		throw new Error(
-			`Failed to scrape review: ${err instanceof Error ? err.message : String(err)}`
+			`Failed to scrape review: ${
+				err instanceof Error ? err.message : String(err)
+			}`
 		);
 	}
 };
