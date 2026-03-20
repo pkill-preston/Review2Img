@@ -1,7 +1,1 @@
-{
-    "functions": {
-        "**": {
-            "includeFiles": "app/assets/fonts/**"
-        }
-    }
-}
+{}
