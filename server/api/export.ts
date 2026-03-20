@@ -14,12 +14,14 @@ export default defineEventHandler(async (event) => {
 		return `data:image/jpeg;base64,${Buffer.from(buffer).toString("base64")}`;
 	};
 
-	const posterBase64 = await getImageBase64(poster);
-	const avatarBase64 = await getImageBase64(user.picture);
+	// 🚀 parallel loading
+	const [posterBase64, avatarBase64, font] = await Promise.all([
+		getImageBase64(poster),
+		getImageBase64(user.picture),
+		readFile(join(process.cwd(), "/app/assets/fonts/Inter-Regular.ttf"))
+	]);
 
-	const font = await readFile(
-		join(process.cwd(), "public/fonts/Inter-Regular.ttf")
-	);
+	const numericRating = Number(rating) || 0;
 
 	const createStar = (type: "full" | "half" | "empty") => {
 		const starPath =
@@ -43,19 +45,9 @@ export default defineEventHandler(async (event) => {
 							fill: "none"
 						}
 					},
-
 					...(type === "full"
-						? [
-								{
-									type: "path",
-									props: {
-										d: starPath,
-										fill: "white"
-									}
-								}
-							]
+						? [{type: "path", props: {d: starPath, fill: "white"}}]
 						: []),
-
 					...(type === "half"
 						? [
 								{
@@ -67,12 +59,7 @@ export default defineEventHandler(async (event) => {
 												id,
 												children: {
 													type: "rect",
-													props: {
-														x: 0,
-														y: 0,
-														width: 11,
-														height: 21
-													}
+													props: {x: 0, y: 0, width: 11, height: 21}
 												}
 											}
 										}
@@ -136,7 +123,6 @@ export default defineEventHandler(async (event) => {
 					color: "#fff",
 					fontFamily: "Inter"
 				},
-
 				children: [
 					{
 						type: "img",
@@ -151,7 +137,6 @@ export default defineEventHandler(async (event) => {
 							}
 						}
 					},
-
 					{
 						type: "div",
 						props: {
@@ -164,7 +149,6 @@ export default defineEventHandler(async (event) => {
 							}
 						}
 					},
-
 					{
 						type: "div",
 						props: {
@@ -177,7 +161,6 @@ export default defineEventHandler(async (event) => {
 								justifyContent: "center",
 								textAlign: "center"
 							},
-
 							children: [
 								{
 									type: "img",
@@ -191,7 +174,6 @@ export default defineEventHandler(async (event) => {
 										}
 									}
 								},
-
 								{
 									type: "div",
 									props: {
@@ -207,27 +189,20 @@ export default defineEventHandler(async (event) => {
 											{
 												type: "span",
 												props: {
-													style: {
-														fontSize: 48,
-														fontWeight: 700
-													},
+													style: {fontSize: 48, fontWeight: 700},
 													children: title
 												}
 											},
 											{
 												type: "span",
 												props: {
-													style: {
-														fontSize: 36,
-														opacity: 0.8
-													},
+													style: {fontSize: 36, opacity: 0.8},
 													children: `(${year})`
 												}
 											}
 										]
 									}
 								},
-
 								{
 									type: "div",
 									props: {
@@ -239,7 +214,6 @@ export default defineEventHandler(async (event) => {
 										children: director
 									}
 								},
-
 								{
 									type: "div",
 									props: {
@@ -249,19 +223,16 @@ export default defineEventHandler(async (event) => {
 											marginBottom: 30,
 											padding: "0 40px",
 											display: "flex",
-                                            text: "center",
+											textAlign: "center",
 											flexDirection: "column",
 											gap: 8
 										},
 										children: review.split("\n").map((line: string) => ({
 											type: "span",
-											props: {
-												children: line
-											}
+											props: {children: line}
 										}))
 									}
 								},
-
 								{
 									type: "div",
 									props: {
@@ -271,10 +242,9 @@ export default defineEventHandler(async (event) => {
 											gap: 12,
 											marginBottom: 40
 										},
-										children: [...buildStars(rating), createHeart(liked)]
+										children: [...buildStars(numericRating), createHeart(liked)]
 									}
 								},
-
 								{
 									type: "div",
 									props: {
