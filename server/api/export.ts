@@ -19,7 +19,10 @@ export default defineEventHandler(async (event) => {
 	const [posterBase64, avatarBase64, font] = await Promise.all([
 		getImageBase64(poster),
 		getImageBase64(user.picture),
-		readFile(await fontPath)
+		readFile(fontPath).catch(() => {
+			console.warn("Font file not found, using system font");
+			return Buffer.alloc(0);
+		})
 	]);
 
 
@@ -320,7 +323,7 @@ export default defineEventHandler(async (event) => {
 	const resvg = new Resvg(svg);
 	const png = resvg.render();
 
-	return new Response(png.asPng(), {
+	return new Response(new Uint8Array(png.asPng()), {
 		headers: {"Content-Type": "image/png"}
 	});
 });
