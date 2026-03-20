@@ -14,11 +14,20 @@ export default defineEventHandler(async (event) => {
 		return `data:image/jpeg;base64,${Buffer.from(buffer).toString("base64")}`;
 	};
 
+	const loadFont = async () => {
+		try {
+			return await readFile(fontFile);
+		} catch {
+			return await fetch(fontFile).then((res) => res.arrayBuffer());
+		}
+	};
+
+	const fontPath = join(process.cwd(), "server/fonts/Inter-Regular.ttf");
 
 	const [posterBase64, avatarBase64, font] = await Promise.all([
 		getImageBase64(poster),
 		getImageBase64(user.picture),
-		readFile(join(process.cwd(), "public/fonts/Inter-Regular.ttf"))
+		readFile(fontPath)
 	]);
 
 	const numericRating = Number(rating) || 0;

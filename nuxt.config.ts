@@ -13,7 +13,10 @@ export default defineNuxtConfig({
 			]
 		}
 	},
+	experimental: {
+		localLayerAliases: true
+	},
 	compatibilityDate: "2025-07-15",
 	modules: ["@nuxtjs/tailwindcss", "shadcn-nuxt"],
-	devtools: {enabled: true},
+	devtools: {enabled: true}
 });
