@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
 		}
 	};
 
-	const fontPath = join(process.cwd(), "server/fonts/Inter-Regular.ttf");
+	const fontPath = join(process.cwd(), "/server/fonts/Inter-Regular.ttf");
 
 	const [posterBase64, avatarBase64, font] = await Promise.all([
 		getImageBase64(poster),
