@@ -1,0 +1,26 @@
+<script setup lang="ts">
+defineProps<{
+  liked: boolean
+}>()
+</script>
+
+<template>
+	<div class="relative w-[22px] h-[21px]">
+		<!-- Empty base -->
+		<svg
+			width="20"
+			height="18"
+			viewBox="0 0 20 18"
+			:fill="liked ? 'white' : 'none'"
+			xmlns="http://www.w3.org/2000/svg"
+		>
+			<path
+				d="M10 4.15428C8 -0.540161 1 -0.0401611 1 5.95987C1 11.9599 10 16.9601 10 16.9601C10 16.9601 19 11.9599 19 5.95987C19 -0.0401611 12 -0.540161 10 4.15428Z"
+				stroke="white"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			/>
+		</svg>
+	</div>
+</template>
