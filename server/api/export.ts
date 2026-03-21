@@ -17,8 +17,8 @@ export default defineEventHandler(async (event) => {
 	const [posterBase64, avatarBase64, font] = await Promise.all([
 		getImageBase64(poster),
 		getImageBase64(user.picture),
-		await fetch("https://your-domain.com/fonts/Inter-Regular.ttf").then((res) =>
-			res.arrayBuffer()
+		await fetch("http://review2-img.vercel.app/fonts/Inter-Regular.ttf").then(
+			(res) => res.arrayBuffer()
 		)
 	]);
 
