@@ -21,10 +21,9 @@ export default defineEventHandler(async (event) => {
 		getImageBase64(user.picture),
 		readFile(fontPath).catch(() => {
 			console.warn("Font file not found, using system font");
-			return Buffer.alloc(0);
+			return null;
 		})
 	]);
-
 
 	const numericRating = Number(rating) || 0;
 
@@ -86,7 +85,7 @@ export default defineEventHandler(async (event) => {
 	};
 
 	const buildStars = (rating: number) => {
-		const stars = [];
+		const stars: ReturnType<typeof createStar>[] = [];
 		for (let i = 0; i < 5; i++) {
 			if (rating >= i + 1) stars.push(createStar("full"));
 			else if (rating >= i + 0.5) stars.push(createStar("half"));
@@ -126,7 +125,7 @@ export default defineEventHandler(async (event) => {
 					justifyContent: "center",
 					background: "#000",
 					color: "#fff",
-					fontFamily: "Inter"
+					fontFamily: font ? "Inter" : "sans-serif"
 				},
 				children: [
 					{
@@ -310,13 +309,15 @@ export default defineEventHandler(async (event) => {
 		{
 			width: 1080,
 			height: 1920,
-			fonts: [
-				{
-					name: "Inter",
-					data: font,
-					weight: 400
-				}
-			]
+			fonts: font
+				? [
+						{
+							name: "Inter",
+							data: font,
+							weight: 400
+						}
+					]
+				: []
 		}
 	);
 
