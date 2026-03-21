@@ -14,15 +14,14 @@ export default defineEventHandler(async (event) => {
 		return `data:image/jpeg;base64,${Buffer.from(buffer).toString("base64")}`;
 	};
 
-	const fontPath = join(process.cwd(), "server/fonts/Inter-Regular.ttf");
+	const fontPath = join(process.cwd(), "public/fonts/Inter-Regular.ttf");
+
+	const fontData = await readFile(fontPath);
 
 	const [posterBase64, avatarBase64, font] = await Promise.all([
 		getImageBase64(poster),
 		getImageBase64(user.picture),
-		readFile(fontPath).catch(() => {
-			console.warn("Font file not found, using system font");
-			return null;
-		})
+		fontData
 	]);
 
 	const numericRating = Number(rating) || 0;
