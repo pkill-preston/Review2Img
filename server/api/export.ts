@@ -14,7 +14,10 @@ export default defineEventHandler(async (event) => {
 		return `data:image/jpeg;base64,${Buffer.from(buffer).toString("base64")}`;
 	};
 
-	const fontPath = join(process.cwd(), "public/fonts/Inter-Regular.ttf");
+	const fontPath = join(
+		process.cwd(),
+		"https://review2-img.vercel.app/fonts/Inter-Regular.ttf"
+	);
 
 	const fontData = await readFile(fontPath);
 
