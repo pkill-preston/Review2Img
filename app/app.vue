@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import Input from './components/ui/input/Input.vue'
 import Button from './components/ui/button/Button.vue'
 
@@ -74,12 +74,13 @@ const exportImage = async () => {
 };
 
 const url = ref("")
+
 </script>
 
 <template>
 	<div class="flex flex-col justify-center items-center gap-4">
 		<div class="flex justiy-center items-center flex-col gap-4">
-			<p>Welcome to Storyboxd</p>
+			<p>Welcome to Storyboxd !</p>
 			<p>Enter your review link to generate a story</p>
 			<div class="flex gap-4">
 				<Input v-model="url"></Input>
