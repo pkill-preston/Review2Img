@@ -53,11 +53,8 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 		return result;
 	};
 
-	const totalStart = performance.now();
-
 	const html = await measure("fetch_review", () => fetchHTML(url));
-
-	const $ = await measure("parse_review_html", async () => cheerio.load(html));
+	const $ = cheerio.load(html);
 
 	const userName = $("a.name").text().trim() || null;
 
@@ -89,9 +86,7 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 	const filmName = topline.children().eq(0).text().trim() || null;
 	const filmReleaseDate = topline.children().eq(1).text().trim() || null;
 
-	const rawFilmPage = topline.children().eq(0).find("a").attr("href") ?? null;
-
-	const filmPage = rawFilmPage ? new URL(rawFilmPage, url).href : null;
+	const filmPage = topline.children().eq(0).find("a").attr("href") ?? null;
 
 	const jsonText = $('script[type="application/ld+json"]').html() ?? "";
 
@@ -110,15 +105,10 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 
 	if (filmPage) {
 		const filmHTML = await measure("fetch_film", () => fetchHTML(filmPage));
-
-		const $$ = await measure("parse_film_html", async () =>
-			cheerio.load(filmHTML)
-		);
+		const $$ = cheerio.load(filmHTML);
 
 		director = $$(".contributorlist").children().first().text().trim() || null;
 	}
-
-	timings["total"] = performance.now() - totalStart;
 
 	console.table(timings);
 
