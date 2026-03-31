@@ -58,105 +58,134 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 	let page: Page | null = null;
 	let filmPage: Page | null = null;
 
-	try {
-		const browser = await getBrowser();
+	const timings: Record<string, number> = {};
 
-		page = await browser.newPage();
+	const measure = async <T>(
+		label: string,
+		fn: () => Promise<T>
+	): Promise<T> => {
+		const start = performance.now();
+		const result = await fn();
+		timings[label] = performance.now() - start;
+		return result;
+	};
+
+	try {
+		const browser = await measure("browser_ready", () => getBrowser());
+
+		page = await measure("new_page", () => browser.newPage());
 		await setupPage(page);
 
-		await page.goto(url, {
-			waitUntil: "domcontentloaded",
-			timeout: 35000
-		});
+		await measure("goto_review", () =>
+			page!.goto(url, {
+				waitUntil: "domcontentloaded",
+				timeout: 35000
+			})
+		);
 
-		const reviewBody = await page.evaluate((): ReviewData => {
-			const userName =
-				document.querySelector("a.name")?.textContent?.trim() ?? null;
+		const reviewBody = await measure("evaluate_review", () =>
+			page!.evaluate((): ReviewData => {
+				const userName =
+					document.querySelector("a.name")?.textContent?.trim() ?? null;
 
-			const userPicture =
-				document
-					.querySelector(".person-summary.-inline > a > img")
-					?.getAttribute("src")
-					?.replaceAll("-48", "-1000") ?? null;
+				const userPicture =
+					document
+						.querySelector(".person-summary.-inline > a > img")
+						?.getAttribute("src")
+						?.replaceAll("-48", "-1000") ?? null;
 
-			let reviewText =
-				document.querySelector(".js-review-body > p")?.innerText?.trim() ?? "";
+				let reviewText =
+					document.querySelector(".js-review-body > p")?.innerText?.trim() ??
+					"";
 
-			const liked = !!document.querySelector(".glyph.inline-liked.-like");
+				const liked = !!document.querySelector(".glyph.inline-liked.-like");
 
-			const ratingRaw =
-				document.querySelector(".glyph.-rating > title")?.textContent ?? "";
+				const ratingRaw =
+					document.querySelector(".glyph.-rating > title")?.textContent ?? "";
 
-			let rating: number | string = "";
+				let rating: number | string = "";
 
-			if (ratingRaw) {
-				rating = ratingRaw.includes("½")
-					? ratingRaw.replace("½", "").length + 0.5
-					: ratingRaw.length;
-			}
-
-			if (reviewText.length >= 220) {
-				reviewText = reviewText.slice(0, 220) + "...";
-			}
-
-			const topline = document.querySelector(".topline");
-
-			const filmName = topline?.children[0]?.textContent?.trim() ?? null;
-			const filmReleaseDate = topline?.children[1]?.textContent?.trim() ?? null;
-
-			const filmPage =
-				(topline?.children[0].children[0] as HTMLAnchorElement | undefined)
-					?.href ?? null;
-
-			const script = document.querySelector(
-				'script[type="application/ld+json"]'
-			);
-
-			const jsonText = script?.textContent ?? "";
-			const filmPosterMatch = jsonText.match(/"image"\s*:\s*"([^"]+)"/);
-
-			let filmPoster = filmPosterMatch?.[1] ?? "";
-
-			if (filmPoster) {
-				filmPoster = filmPoster
-					.replace(/-\d{3,4}(?=-crop\.jpg|$)/i, "-1500")
-					.replace(/0-\d+-0-\d+(?=-crop)/i, "0-1000-0-1500")
-					.replace(/-(\d{3})-/, "-1000-");
-			}
-
-			return {
-				user: {name: userName, picture: userPicture},
-				review: {text: reviewText, liked, rating},
-				film: {
-					name: filmName,
-					releaseDate: filmReleaseDate,
-					poster: filmPoster,
-					page: filmPage
+				if (ratingRaw) {
+					rating = ratingRaw.includes("½")
+						? ratingRaw.replace("½", "").length + 0.5
+						: ratingRaw.length;
 				}
-			};
-		});
+
+				if (reviewText.length >= 220) {
+					reviewText = reviewText.slice(0, 220) + "...";
+				}
+
+				const topline = document.querySelector(".topline");
+
+				const filmName = topline?.children[0]?.textContent?.trim() ?? null;
+				const filmReleaseDate =
+					topline?.children[1]?.textContent?.trim() ?? null;
+
+				const filmPage =
+					(topline?.children[0].children[0] as HTMLAnchorElement | undefined)
+						?.href ?? null;
+
+				const script = document.querySelector(
+					'script[type="application/ld+json"]'
+				);
+
+				const jsonText = script?.textContent ?? "";
+				const filmPosterMatch = jsonText.match(/"image"\s*:\s*"([^"]+)"/);
+
+				let filmPoster = filmPosterMatch?.[1] ?? "";
+
+				if (filmPoster) {
+					filmPoster = filmPoster
+						.replace(/-\d{3,4}(?=-crop\.jpg|$)/i, "-1500")
+						.replace(/0-\d+-0-\d+(?=-crop)/i, "0-1000-0-1500")
+						.replace(/-(\d{3})-/, "-1000-");
+				}
+
+				return {
+					user: {name: userName, picture: userPicture},
+					review: {text: reviewText, liked, rating},
+					film: {
+						name: filmName,
+						releaseDate: filmReleaseDate,
+						poster: filmPoster,
+						page: filmPage
+					}
+				};
+			})
+		);
 
 		let director: string | null = null;
 
 		if (reviewBody.film.page) {
-			filmPage = await (await getBrowser()).newPage();
-			await setupPage(filmPage);
-
-			await filmPage.goto(reviewBody.film.page, {
-				waitUntil: "domcontentloaded"
+			filmPage = await measure("new_film_page", async () => {
+				const p = await (await getBrowser()).newPage();
+				await setupPage(p);
+				return p;
 			});
 
-			director = await filmPage.evaluate(() => {
-				return (
-					document
-						.querySelector(".contributorlist")
-						?.children[0]?.textContent?.trim() ?? null
-				);
-			});
+			await measure("goto_film", () =>
+				filmPage!.goto(reviewBody.film.page!, {
+					waitUntil: "domcontentloaded"
+				})
+			);
+
+			director = await measure("evaluate_film", () =>
+				filmPage!.evaluate(() => {
+					return (
+						document
+							.querySelector(".contributorlist")
+							?.children[0]?.textContent?.trim() ?? null
+					);
+				})
+			);
 		}
 
-		await page.close();
-		if (filmPage) await filmPage.close();
+		await measure("close_pages", async () => {
+			await page?.close();
+			if (filmPage) await filmPage.close();
+		});
+
+		console.table(timings);
 
 		return {
 			...reviewBody,
