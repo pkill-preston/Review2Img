@@ -106,7 +106,7 @@ function getStarState(index: number, rating: number) {
 					<span class="font-medium font-sans tracking-wide">
 						{{ user.name }}
 					</span>
-					<span class="text-sm opacity-80 font-sans">made with Storyboxd</span>
+					<span class="text-sm opacity-80 font-sans">made with Storyloggd</span>
 				</div>
 			</div>
 		</div>

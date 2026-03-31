@@ -288,7 +288,7 @@ export default defineEventHandler(async (event) => {
 																	fontSize: 26,
 																	opacity: 0.7
 																},
-																children: "made with Storyboxd"
+																children: "made with Storyloggd"
 															}
 														}
 													]

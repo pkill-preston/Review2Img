@@ -41,19 +41,9 @@ const fetchHTML = async (url: string): Promise<string> => {
 };
 
 const getReviewInfo = async (url: string): Promise<ReviewData> => {
-	const timings: Record<string, number> = {};
 
-	const measure = async <T>(
-		label: string,
-		fn: () => Promise<T>
-	): Promise<T> => {
-		const start = performance.now();
-		const result = await fn();
-		timings[label] = performance.now() - start;
-		return result;
-	};
+	const html = await fetchHTML(url);
 
-	const html = await measure("fetch_review", () => fetchHTML(url));
 	const $ = cheerio.load(html);
 
 	const userName = $("a.name").text().trim() || null;
@@ -104,13 +94,10 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 	let director: string | null = null;
 
 	if (filmPage) {
-		const filmHTML = await measure("fetch_film", () => fetchHTML(filmPage));
+		const filmHTML = await fetchHTML("https://letterboxd.com"+filmPage);
 		const $$ = cheerio.load(filmHTML);
-
 		director = $$(".contributorlist").children().first().text().trim() || null;
 	}
-
-	console.table(timings);
 
 	return {
 		user: {name: userName, picture: userPicture},
