@@ -1,5 +1,4 @@
-import puppeteer, {Browser, Page} from "puppeteer-core";
-import chromium from "@sparticuz/chromium";
+import * as cheerio from "cheerio";
 
 interface User {
 	name: string | null;
@@ -26,38 +25,22 @@ interface ReviewData {
 	film: Film;
 }
 
-let browserPromise: Promise<Browser> | null = null;
-
-const getBrowser = async (): Promise<Browser> => {
-	if (!browserPromise) {
-		browserPromise = puppeteer.launch({
-			args: chromium.args,
-			defaultViewport: chromium.defaultViewport,
-			executablePath: await chromium.executablePath(),
-			headless: chromium.headless
-		});
-	}
-	return browserPromise;
-};
-
-const setupPage = async (page: Page) => {
-	await page.setRequestInterception(true);
-
-	page.on("request", (req) => {
-		const type = req.resourceType();
-
-		if (["image", "font", "stylesheet", "media"].includes(type)) {
-			req.abort();
-		} else {
-			req.continue();
+const fetchHTML = async (url: string): Promise<string> => {
+	const res = await fetch(url, {
+		headers: {
+			"User-Agent":
+				"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/120 Safari/537.36"
 		}
 	});
+
+	if (!res.ok) {
+		throw new Error(`Failed to fetch ${url}: ${res.status}`);
+	}
+
+	return await res.text();
 };
 
 const getReviewInfo = async (url: string): Promise<ReviewData> => {
-	let page: Page | null = null;
-	let filmPage: Page | null = null;
-
 	const timings: Record<string, number> = {};
 
 	const measure = async <T>(
@@ -70,139 +53,86 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 		return result;
 	};
 
-	try {
-		const browser = await measure("browser_ready", () => getBrowser());
+	const totalStart = performance.now();
 
-		page = await measure("new_page", () => browser.newPage());
-		await setupPage(page);
+	const html = await measure("fetch_review", () => fetchHTML(url));
 
-		await measure("goto_review", () =>
-			page!.goto(url, {
-				waitUntil: "domcontentloaded",
-				timeout: 35000
-			})
-		);
+	const $ = await measure("parse_review_html", async () => cheerio.load(html));
 
-		const reviewBody = await measure("evaluate_review", () =>
-			page!.evaluate((): ReviewData => {
-				const userName =
-					document.querySelector("a.name")?.textContent?.trim() ?? null;
+	const userName = $("a.name").text().trim() || null;
 
-				const userPicture =
-					document
-						.querySelector(".person-summary.-inline > a > img")
-						?.getAttribute("src")
-						?.replaceAll("-48", "-1000") ?? null;
+	const userPicture =
+		$(".person-summary.-inline > a > img")
+			.attr("src")
+			?.replaceAll("-48", "-1000") ?? null;
 
-				let reviewText =
-					document.querySelector(".js-review-body > p")?.innerText?.trim() ??
-					"";
+	let reviewText = $(".js-review-body > p").text().trim() || "";
 
-				const liked = !!document.querySelector(".glyph.inline-liked.-like");
+	const liked = $(".glyph.inline-liked.-like").length > 0;
 
-				const ratingRaw =
-					document.querySelector(".glyph.-rating > title")?.textContent ?? "";
+	const ratingRaw = $(".glyph.-rating > title").text() || "";
 
-				let rating: number | string = "";
+	let rating: number | string = "";
 
-				if (ratingRaw) {
-					rating = ratingRaw.includes("½")
-						? ratingRaw.replace("½", "").length + 0.5
-						: ratingRaw.length;
-				}
-
-				if (reviewText.length >= 220) {
-					reviewText = reviewText.slice(0, 220) + "...";
-				}
-
-				const topline = document.querySelector(".topline");
-
-				const filmName = topline?.children[0]?.textContent?.trim() ?? null;
-				const filmReleaseDate =
-					topline?.children[1]?.textContent?.trim() ?? null;
-
-				const filmPage =
-					(topline?.children[0].children[0] as HTMLAnchorElement | undefined)
-						?.href ?? null;
-
-				const script = document.querySelector(
-					'script[type="application/ld+json"]'
-				);
-
-				const jsonText = script?.textContent ?? "";
-				const filmPosterMatch = jsonText.match(/"image"\s*:\s*"([^"]+)"/);
-
-				let filmPoster = filmPosterMatch?.[1] ?? "";
-
-				if (filmPoster) {
-					filmPoster = filmPoster
-						.replace(/-\d{3,4}(?=-crop\.jpg|$)/i, "-1500")
-						.replace(/0-\d+-0-\d+(?=-crop)/i, "0-1000-0-1500")
-						.replace(/-(\d{3})-/, "-1000-");
-				}
-
-				return {
-					user: {name: userName, picture: userPicture},
-					review: {text: reviewText, liked, rating},
-					film: {
-						name: filmName,
-						releaseDate: filmReleaseDate,
-						poster: filmPoster,
-						page: filmPage
-					}
-				};
-			})
-		);
-
-		let director: string | null = null;
-
-		if (reviewBody.film.page) {
-			filmPage = await measure("new_film_page", async () => {
-				const p = await (await getBrowser()).newPage();
-				await setupPage(p);
-				return p;
-			});
-
-			await measure("goto_film", () =>
-				filmPage!.goto(reviewBody.film.page!, {
-					waitUntil: "domcontentloaded"
-				})
-			);
-
-			director = await measure("evaluate_film", () =>
-				filmPage!.evaluate(() => {
-					return (
-						document
-							.querySelector(".contributorlist")
-							?.children[0]?.textContent?.trim() ?? null
-					);
-				})
-			);
-		}
-
-		await measure("close_pages", async () => {
-			await page?.close();
-			if (filmPage) await filmPage.close();
-		});
-
-		console.table(timings);
-
-		return {
-			...reviewBody,
-			film: {
-				...reviewBody.film,
-				director
-			}
-		};
-	} catch (err) {
-		if (page) await page.close().catch(() => {});
-		if (filmPage) await filmPage.close().catch(() => {});
-		throw new Error(
-			`Failed to scrape review: ${
-				err instanceof Error ? err.message : String(err)
-			}`
-		);
+	if (ratingRaw) {
+		rating = ratingRaw.includes("½")
+			? ratingRaw.replace("½", "").length + 0.5
+			: ratingRaw.length;
 	}
+
+	if (reviewText.length >= 220) {
+		reviewText = reviewText.slice(0, 220) + "...";
+	}
+
+	const topline = $(".topline");
+
+	const filmName = topline.children().eq(0).text().trim() || null;
+	const filmReleaseDate = topline.children().eq(1).text().trim() || null;
+
+	const rawFilmPage = topline.children().eq(0).find("a").attr("href") ?? null;
+
+	const filmPage = rawFilmPage ? new URL(rawFilmPage, url).href : null;
+
+	const jsonText = $('script[type="application/ld+json"]').html() ?? "";
+
+	const filmPosterMatch = jsonText.match(/"image"\s*:\s*"([^"]+)"/);
+
+	let filmPoster = filmPosterMatch?.[1] ?? "";
+
+	if (filmPoster) {
+		filmPoster = filmPoster
+			.replace(/-\d{3,4}(?=-crop\.jpg|$)/i, "-1500")
+			.replace(/0-\d+-0-\d+(?=-crop)/i, "0-1000-0-1500")
+			.replace(/-(\d{3})-/, "-1000-");
+	}
+
+	let director: string | null = null;
+
+	if (filmPage) {
+		const filmHTML = await measure("fetch_film", () => fetchHTML(filmPage));
+
+		const $$ = await measure("parse_film_html", async () =>
+			cheerio.load(filmHTML)
+		);
+
+		director = $$(".contributorlist").children().first().text().trim() || null;
+	}
+
+	timings["total"] = performance.now() - totalStart;
+
+	console.table(timings);
+
+	return {
+		user: {name: userName, picture: userPicture},
+		review: {text: reviewText, liked, rating},
+		film: {
+			name: filmName,
+			releaseDate: filmReleaseDate,
+			poster: filmPoster,
+			page: filmPage,
+			director
+		}
+	};
 };
 
 export default defineEventHandler(async (event) => {
@@ -215,6 +145,5 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const data = await getReviewInfo(reviewURL);
-	return data;
+	return await getReviewInfo(reviewURL);
 });
