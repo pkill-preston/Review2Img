@@ -26,19 +26,48 @@ interface ReviewData {
 	film: Film;
 }
 
-const getReviewInfo = async (url: string): Promise<ReviewData> => {
-	let browser: Browser | null = null;
+let browserPromise: Promise<Browser> | null = null;
 
-	try {
-		browser = await puppeteer.launch({
+const getBrowser = async (): Promise<Browser> => {
+	if (!browserPromise) {
+		browserPromise = puppeteer.launch({
 			args: chromium.args,
 			defaultViewport: chromium.defaultViewport,
 			executablePath: await chromium.executablePath(),
 			headless: chromium.headless
 		});
+	}
+	return browserPromise;
+};
 
-		const page: Page = await browser.newPage();
-		await page.goto(url, {waitUntil: "domcontentloaded", timeout: 35000});
+const setupPage = async (page: Page) => {
+	await page.setRequestInterception(true);
+
+	page.on("request", (req) => {
+		const type = req.resourceType();
+
+		if (["image", "font", "stylesheet", "media"].includes(type)) {
+			req.abort();
+		} else {
+			req.continue();
+		}
+	});
+};
+
+const getReviewInfo = async (url: string): Promise<ReviewData> => {
+	let page: Page | null = null;
+	let filmPage: Page | null = null;
+
+	try {
+		const browser = await getBrowser();
+
+		page = await browser.newPage();
+		await setupPage(page);
+
+		await page.goto(url, {
+			waitUntil: "domcontentloaded",
+			timeout: 35000
+		});
 
 		const reviewBody = await page.evaluate((): ReviewData => {
 			const userName =
@@ -55,15 +84,15 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 
 			const liked = !!document.querySelector(".glyph.inline-liked.-like");
 
-			let ratingRaw =
+			const ratingRaw =
 				document.querySelector(".glyph.-rating > title")?.textContent ?? "";
 
-			let rating: number | string = ratingRaw;
+			let rating: number | string = "";
 
-			if (ratingRaw.endsWith("½")) {
-				rating = ratingRaw.length - 1 + 0.5;
-			} else if (ratingRaw) {
-				rating = ratingRaw.length;
+			if (ratingRaw) {
+				rating = ratingRaw.includes("½")
+					? ratingRaw.replace("½", "").length + 0.5
+					: ratingRaw.length;
 			}
 
 			if (reviewText.length >= 220) {
@@ -71,6 +100,7 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 			}
 
 			const topline = document.querySelector(".topline");
+
 			const filmName = topline?.children[0]?.textContent?.trim() ?? null;
 			const filmReleaseDate = topline?.children[1]?.textContent?.trim() ?? null;
 
@@ -109,11 +139,14 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 		let director: string | null = null;
 
 		if (reviewBody.film.page) {
-			await page.goto(reviewBody.film.page, {
+			filmPage = await (await getBrowser()).newPage();
+			await setupPage(filmPage);
+
+			await filmPage.goto(reviewBody.film.page, {
 				waitUntil: "domcontentloaded"
 			});
 
-			director = await page.evaluate(() => {
+			director = await filmPage.evaluate(() => {
 				return (
 					document
 						.querySelector(".contributorlist")
@@ -122,7 +155,8 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 			});
 		}
 
-		await browser.close();
+		await page.close();
+		if (filmPage) await filmPage.close();
 
 		return {
 			...reviewBody,
@@ -132,7 +166,8 @@ const getReviewInfo = async (url: string): Promise<ReviewData> => {
 			}
 		};
 	} catch (err) {
-		if (browser) await browser.close().catch(() => {});
+		if (page) await page.close().catch(() => {});
+		if (filmPage) await filmPage.close().catch(() => {});
 		throw new Error(
 			`Failed to scrape review: ${
 				err instanceof Error ? err.message : String(err)
