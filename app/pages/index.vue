@@ -35,7 +35,7 @@ const getUserProfile = async (username: string) => {
 <template>
 	<div class="flex flex-col justify-center px-4 items-center gap-4">
 		<div
-			class="flex md:w-full  max-w-[720px] text-center text-xl justiy-center items-center flex-col gap-4"
+			class="flex md:w-full max-w-[720px] text-center text-xl justiy-center items-center flex-col gap-4"
 		>
 			<p>Welcome to StoryLoggd !</p>
 			<p>
@@ -50,7 +50,7 @@ const getUserProfile = async (username: string) => {
 				></Input>
 				<NuxtLink :to="`/latestreviews?username=${username}`">
 					<Button
-						class="w-[16rem] p-6"
+						class="md:w-auto w-[16rem] p-6"
 						size="icon-lg"
 						@click="getUserProfile(username)"
 					>
