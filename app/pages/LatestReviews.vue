@@ -143,7 +143,7 @@ const shareImage = async () => {
 				<div
 					v-for="(item, index) in reviews"
 					:key="index"
-					class="w-[29%] sm:w-[48%] md:w-[30%] max-h-[43] flex flex-wrap gap-3"
+					class="w-[29%] sm:w-[48%] md:w-[30%] flex flex-wrap gap-3"
 				>
 					<div
 						class="aspect-[2/3] bg-black border rounded-xl overflow-hidden relative"

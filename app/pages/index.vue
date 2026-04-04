@@ -43,7 +43,7 @@ const getUserProfile = async (username: string) => {
 			</p>
 			<div class="flex text-lg items-center justify-center w-full md:flex-row flex-col gap-4">
 				<Input
-					@keydown.enter="getUserProfile(username)"
+					@keydown.enter.prevent="getUserProfile(username)"
 					placeholder="@username"
 					class="max-w-[16rem] shadow-lg p-6 border-2"
 					v-model="username"
