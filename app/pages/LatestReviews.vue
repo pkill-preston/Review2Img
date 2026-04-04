@@ -55,8 +55,8 @@ const getReview = async (url: string) => {
   }
 };
 
-const exportImage = async () => {
-  if (!data.value) return;
+const getImageBlob = async (): Promise<Blob | null> => {
+  if (!data.value) return null;
 
   try {
     const res = await fetch("/api/export", {
@@ -76,27 +76,54 @@ const exportImage = async () => {
       }),
     });
 
-    if (!res.ok) throw new Error('Export failed');
+    if (!res.ok) throw new Error("Export failed");
 
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
+    return await res.blob();
+  } catch (err) {
+    console.error("Export error:", err);
+    return null;
+  }
+};
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${data.value?.film?.name || 'review'}.png`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+const downloadImage = async () => {
+  const blob = await getImageBlob();
+  if (!blob) return;
 
-    URL.revokeObjectURL(url);
-  } catch (err: any) {
-    console.error('Export error:', err);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${data.value?.film?.name || "review"}.png`;
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+};
+
+const shareImage = async () => {
+  const blob = await getImageBlob();
+  if (!blob) return;
+
+  const file = new File([blob], "story.png", { type: "image/png" });
+
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({
+        files: [file],
+        title: "Share your story",
+      });
+    } else {
+      downloadImage();
+    }
+  } catch (err) {
+    console.error("Share error:", err);
   }
 };
 </script>
 
 <template>
-	<div class="w-full flex px-4 justify-center items-center min-h-screen py-8">
+	<div class="w-full flex px-4 flex-col items-center min-h-screen py-8">
 		<div class="flex flex-col max-w-[720px] gap-8 w-full">
 			<div>
 				<p class="text-3xl font-semibold">
@@ -112,11 +139,11 @@ const exportImage = async () => {
 				{{ error }}
 			</div>
 
-			<div class="flex gap-6 flex-wrap justify-center md:justify-between">
+			<div class="flex gap-6 flex-wrap justify-between">
 				<div
 					v-for="(item, index) in reviews"
 					:key="index"
-					class="w-full sm:w-[48%] md:w-[30%] flex flex-col gap-3"
+					class="w-[29%] sm:w-[48%] md:w-[30%] max-h-[43] flex flex-wrap gap-3"
 				>
 					<div
 						class="aspect-[2/3] bg-black border rounded-xl overflow-hidden relative"
@@ -129,10 +156,11 @@ const exportImage = async () => {
 							class="w-full h-full object-cover"
 						/>
 					</div>
-
-					<p class="font-medium text-center line-clamp-2 min-h-[2.5em]">
+					<div class="w-full flex items-center justify-center">
+						<p class="font-medium text-center line-clamp-2 min-h-[2.5em]">
 						{{ item.film }}
 					</p>
+					</div>
 
 					<Dialog>
 						<DialogTrigger as-child>
@@ -147,18 +175,18 @@ const exportImage = async () => {
 						</DialogTrigger>
 
 						<DialogContent
-							class="flex !max-w-[92vw] h-[92vh] p-0 overflow-hidden"
+							class="flex md:!max-w-[60%] !max-w-[90vw] h-[80vh] p-2 overflow-hidden"
 						>
 							<div
-								class="h-full w-full flex justify-center items-center bg-background"
+								class="h-full w-full flex flex-col justify-center items-center bg-background"
 							>
 								<LoadingSpinner v-if="cardLoading" class="scale-125" />
 
 								<div
 									v-else
-									class="flex flex-col items-center w-full max-h-[85vh] p-4 overflow-auto"
+									class="flex flex-col items-center w-full max-h-[85%] p-4 overflow-hidden"
 								>
-									<div class="scale-[0.32] md:scale-[0.35] origin-top my-8">
+									<div class="scale-[0.32] md:scale-[0.35] origin-top rounded-lg my-8">
 										<StoryImage
 											:user="data?.user"
 											:review="data?.review"
@@ -167,14 +195,25 @@ const exportImage = async () => {
 											:show-heart="true"
 										/>
 									</div>
-
+								</div>
+								<div class="flex  md:w-[378px] w-full justify-between gap-2">
 									<Button
-										@click="exportImage"
+										v-if="!cardLoading"
+										@click="downloadImage"
 										variant="default"
 										size="lg"
-										class="px-10 py-6 text-xl font-semibold"
+										class="text-md mt-5 font-semibold"
 									>
 										Download Image
+									</Button>
+									<Button
+										v-if="!cardLoading"
+										@click="shareImage"
+										variant="default"
+										size="lg"
+										class="text-md mt-5 font-semibold"
+									>
+										Share Image
 									</Button>
 								</div>
 							</div>

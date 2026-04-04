@@ -1,10 +1,6 @@
 <template>
-  <span class="loader"></span>
+	<span class="loader"></span>
 </template>
-
-<script setup lang="ts">
-// No script needed
-</script>
 
 <style scoped>
 .loader {
@@ -19,16 +15,16 @@
   animation: flash 0.6s ease-in-out infinite alternate;
 }
 
-/* Base color variables using your OKLCH color */
+
 .loader {
-  --loader-main: oklch(0.7899 0.2343 147.0684);     /* Main bright color */
-  --loader-dim:  oklch(0.7899 0.2343 147.0684 / 0.25); /* Dim version with transparency */
+  --loader-main: oklch(0.7899 0.2343 147.0684);
+  --loader-dim:  oklch(0.7899 0.2343 147.0684 / 0.25);
 }
 
-/* Optional: Dark theme adjustment (slightly brighter/different lightness for better visibility) */
+
 @media (prefers-color-scheme: dark) {
   .loader {
-    --loader-main: oklch(0.82 0.2343 147.0684);     /* Slightly lighter for dark backgrounds */
+    --loader-main: oklch(0.82 0.2343 147.0684);
     --loader-dim:  oklch(0.82 0.2343 147.0684 / 0.28);
   }
 }

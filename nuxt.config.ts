@@ -4,6 +4,9 @@ export default defineNuxtConfig({
 		pageTransition: {name: "page", mode: "out-in"}
 	},
 	vite: {
+		server: {
+			allowedHosts: true
+		},
 		optimizeDeps: {
 			include: [
 				"clsx",

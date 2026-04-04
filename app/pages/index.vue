@@ -35,21 +35,22 @@ const getUserProfile = async (username: string) => {
 <template>
 	<div class="flex flex-col justify-center px-4 items-center gap-4">
 		<div
-			class="flex md:w-full  max-w-[720px] text-center justiy-center items-center flex-col gap-4"
+			class="flex md:w-full  max-w-[720px] text-center text-xl justiy-center items-center flex-col gap-4"
 		>
 			<p>Welcome to StoryLoggd !</p>
 			<p>
 				Enter your username to retrieve your last 5 reviews or your review url
 			</p>
-			<div class="flex w-full md:flex-row flex-col gap-4">
+			<div class="flex text-lg items-center justify-center w-full md:flex-row flex-col gap-4">
 				<Input
-					placeholder="Username"
-					class="shadow-lg p-6 border-2"
+					@keydown.enter="getUserProfile(username)"
+					placeholder="@username"
+					class="max-w-[16rem] shadow-lg p-6 border-2"
 					v-model="username"
 				></Input>
 				<NuxtLink :to="`/latestreviews?username=${username}`">
 					<Button
-						class="w-full"
+						class="w-[16rem] p-6"
 						size="icon-lg"
 						@click="getUserProfile(username)"
 					>
