@@ -27,8 +27,11 @@ const error = ref<string | null>(null)
 const loading = ref(false)
 const username = ref("")
 
+const route = useRouter()
+
 const getUserProfile = async (username: string) => {
   const reviews = "https://letterboxd.com/" + username + "/reviews/"
+  route.push(`/latestreviews?username=${username}`)
 }
 </script>
 
@@ -43,7 +46,7 @@ const getUserProfile = async (username: string) => {
 			</p>
 			<div class="flex text-lg items-center justify-center w-full md:flex-row flex-col gap-4">
 				<Input
-					@keydown.enter.prevent="getUserProfile(username)"
+					@keydown.enter="getUserProfile(username)"
 					placeholder="@username"
 					class="max-w-[16rem] shadow-lg p-6 border-2"
 					v-model="username"

@@ -5,6 +5,10 @@ export default defineNuxtConfig({
 			title: "Storyloggd — Turn Letterboxd Reviews into Story Images",
 			meta: [
 				{
+					name: "google",
+					content: "OxCo5e8EgvyBPImm3lF2gA6Y_7S5PjgldnRBzqyzz1g"
+				},
+				{
 					name: "description",
 					content:
 						"Create beautiful, shareable story images from your Letterboxd reviews."
